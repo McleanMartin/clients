@@ -33,7 +33,12 @@ export default {
 						},
 					});
 				} catch (error) {
-					return new Response(JSON.stringify({ error: "Failed to fetch customers" }), {
+					console.error("Error fetching customers:", error);
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					return new Response(JSON.stringify({ 
+						error: "Failed to fetch customers",
+						details: errorMessage 
+					}), {
 						status: 500,
 						headers: { "content-type": "application/json" },
 					});
@@ -220,7 +225,12 @@ export default {
 						},
 					});
 				} catch (error) {
-					return new Response(JSON.stringify({ error: "Failed to fetch companies" }), {
+					console.error("Error fetching companies:", error);
+					const errorMessage = error instanceof Error ? error.message : "Unknown error";
+					return new Response(JSON.stringify({ 
+						error: "Failed to fetch companies",
+						details: errorMessage 
+					}), {
 						status: 500,
 						headers: { "content-type": "application/json" },
 					});

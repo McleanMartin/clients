@@ -15,90 +15,151 @@ export function renderHtml() {
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff;
             min-height: 100vh;
             padding: 20px;
-            color: #333;
+            color: #000000;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: #ffffff;
+            border: 1px solid #000000;
             overflow: hidden;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #000000;
+            color: #ffffff;
             padding: 30px;
             text-align: center;
+            border-bottom: 2px solid #000000;
         }
 
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #cccccc;
         }
 
         .toolbar {
             padding: 20px 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e0e0e0;
+            background: #ffffff;
+            border-bottom: 1px solid #000000;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-filter-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input,
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #000000;
+            font-size: 14px;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .search-input {
+            min-width: 250px;
+        }
+
+        .search-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border: 2px solid #000000;
+        }
+
+        .filter-select {
+            min-width: 150px;
         }
 
         .btn {
             padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
+            border: 1px solid #000000;
+            border-radius: 0;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s;
             text-decoration: none;
             display: inline-block;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn:hover {
+            background: #000000;
+            color: #ffffff;
         }
 
         .btn-primary {
-            background: #667eea;
-            color: white;
+            background: #000000;
+            color: #ffffff;
         }
 
         .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background: #333333;
         }
 
         .btn-danger {
-            background: #e74c3c;
-            color: white;
+            background: #ffffff;
+            color: #000000;
+            border-color: #000000;
         }
 
         .btn-danger:hover {
-            background: #c0392b;
+            background: #000000;
+            color: #ffffff;
         }
 
         .btn-edit {
-            background: #3498db;
-            color: white;
+            background: #ffffff;
+            color: #000000;
+            border-color: #000000;
         }
 
         .btn-edit:hover {
-            background: #2980b9;
+            background: #000000;
+            color: #ffffff;
         }
 
         .btn-secondary {
-            background: #95a5a6;
-            color: white;
+            background: #ffffff;
+            color: #000000;
+            border-color: #000000;
         }
 
         .btn-secondary:hover {
-            background: #7f8c8d;
+            background: #000000;
+            color: #ffffff;
         }
 
         .table-container {
@@ -109,28 +170,36 @@ export function renderHtml() {
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
+            background: #ffffff;
         }
 
         thead {
-            background: #f8f9fa;
+            background: #000000;
+            color: #ffffff;
         }
 
         th {
             padding: 15px;
             text-align: left;
             font-weight: 600;
-            color: #555;
-            border-bottom: 2px solid #e0e0e0;
+            border: 1px solid #000000;
         }
 
         td {
             padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
+            border: 1px solid #cccccc;
         }
 
         tbody tr:hover {
-            background: #f8f9fa;
+            background: #f5f5f5;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        tbody tr:nth-child(even):hover {
+            background: #f0f0f0;
         }
 
         .actions {
@@ -146,7 +215,7 @@ export function renderHtml() {
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
+            color: #666666;
         }
 
         .empty-state p {
@@ -162,8 +231,7 @@ export function renderHtml() {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -180,14 +248,14 @@ export function renderHtml() {
         }
 
         .modal {
-            background: white;
-            border-radius: 12px;
+            background: #ffffff;
+            border: 2px solid #000000;
             padding: 30px;
             max-width: 500px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 0 4px #ffffff;
             animation: slideUp 0.3s;
         }
 
@@ -207,11 +275,14 @@ export function renderHtml() {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #000000;
         }
 
         .modal-header h2 {
             font-size: 24px;
-            color: #333;
+            color: #000000;
+            font-weight: 600;
         }
 
         .close-btn {
@@ -219,17 +290,19 @@ export function renderHtml() {
             border: none;
             font-size: 28px;
             cursor: pointer;
-            color: #999;
+            color: #000000;
             padding: 0;
             width: 30px;
             height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
+            line-height: 1;
         }
 
         .close-btn:hover {
-            color: #333;
+            background: #000000;
+            color: #ffffff;
         }
 
         .form-group {
@@ -240,27 +313,29 @@ export function renderHtml() {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #555;
+            color: #000000;
         }
 
         .form-group label .required {
-            color: #e74c3c;
+            color: #000000;
         }
 
         .form-group input,
         .form-group select {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
+            border: 1px solid #000000;
+            border-radius: 0;
             font-size: 14px;
+            background: #ffffff;
+            color: #000000;
             transition: border-color 0.2s;
         }
 
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border: 2px solid #000000;
         }
 
         .form-actions {
@@ -268,12 +343,19 @@ export function renderHtml() {
             gap: 10px;
             justify-content: flex-end;
             margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #cccccc;
         }
 
         .loading {
             text-align: center;
             padding: 40px;
-            color: #999;
+            color: #666666;
+        }
+
+        .results-count {
+            color: #666666;
+            font-size: 14px;
         }
 
         @media (max-width: 768px) {
@@ -283,8 +365,21 @@ export function renderHtml() {
 
             .toolbar {
                 flex-direction: column;
-                gap: 15px;
                 align-items: stretch;
+            }
+
+            .toolbar-left,
+            .toolbar-right {
+                width: 100%;
+            }
+
+            .search-filter-container {
+                width: 100%;
+            }
+
+            .search-input {
+                flex: 1;
+                min-width: 0;
             }
 
             .table-container {
@@ -304,12 +399,29 @@ export function renderHtml() {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏢 CRM - Customer Management</h1>
+            <h1>CRM - Customer Management</h1>
             <p>Manage your customer relationships</p>
         </div>
 
         <div class="toolbar">
-            <button class="btn btn-primary" onclick="openAddModal()">+ Add Customer</button>
+            <div class="toolbar-left">
+                <div class="search-filter-container">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Search customers..." 
+                        oninput="filterTable()"
+                    />
+                    <select id="companyFilter" class="filter-select" onchange="filterTable()">
+                        <option value="">All Companies</option>
+                    </select>
+                </div>
+                <span id="resultsCount" class="results-count"></span>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Customer</button>
+            </div>
         </div>
 
         <div class="table-container">
@@ -331,6 +443,9 @@ export function renderHtml() {
             </table>
             <div id="emptyState" class="empty-state" style="display: none;">
                 <p>No customers found. Click "+ Add Customer" to get started.</p>
+            </div>
+            <div id="noResultsState" class="empty-state" style="display: none;">
+                <p>No customers match your search criteria.</p>
             </div>
         </div>
     </div>
@@ -376,6 +491,7 @@ export function renderHtml() {
 
     <script>
         let companies = [];
+        let allCustomers = [];
         let editingCustomerId = null;
 
         // Utility functions
@@ -401,14 +517,26 @@ export function renderHtml() {
         async function loadCompanies() {
             try {
                 const response = await fetch('/api/companies');
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    console.error('Failed to load companies:', errorData.error || errorData.details);
+                    return;
+                }
+                
                 companies = await response.json();
                 const select = document.getElementById('companyId');
+                const filterSelect = document.getElementById('companyFilter');
+                
                 select.innerHTML = '<option value="">None</option>';
+                filterSelect.innerHTML = '<option value="">All Companies</option>';
+                
                 companies.forEach(company => {
                     const option = document.createElement('option');
                     option.value = company.id;
                     option.textContent = escapeHtml(company.name);
-                    select.appendChild(option);
+                    select.appendChild(option.cloneNode(true));
+                    filterSelect.appendChild(option);
                 });
             } catch (error) {
                 console.error('Failed to load companies:', error);
@@ -424,37 +552,102 @@ export function renderHtml() {
 
             try {
                 const response = await fetch('/api/customers');
-                const customers = await response.json();
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(errorData.error || errorData.details || \`HTTP \${response.status}\`);
+                }
+                
+                allCustomers = await response.json();
 
                 loading.style.display = 'none';
 
-                if (customers.length === 0) {
+                if (allCustomers.length === 0) {
                     table.style.display = 'none';
                     emptyState.style.display = 'block';
+                    document.getElementById('noResultsState').style.display = 'none';
+                    document.getElementById('resultsCount').textContent = '';
                 } else {
-                    table.style.display = 'table';
-                    emptyState.style.display = 'none';
-                    tbody.innerHTML = customers.map(customer => \`
-                        <tr>
-                            <td>\${escapeHtml(customer.id)}</td>
-                            <td>\${escapeHtml(customer.first_name)}</td>
-                            <td>\${escapeHtml(customer.last_name)}</td>
-                            <td>\${escapeHtml(customer.email)}</td>
-                            <td>\${escapeHtml(customer.phone || '-')}</td>
-                            <td>\${escapeHtml(customer.company_name || '-')}</td>
-                            <td>
-                                <div class="actions">
-                                    <button class="btn btn-edit" onclick="editCustomer(\${customer.id}, '\${escapeJs(customer.first_name)}', '\${escapeJs(customer.last_name)}', '\${escapeJs(customer.email)}', '\${escapeJs(customer.phone || '')}', \${customer.company_id || 'null'})">Edit</button>
-                                    <button class="btn btn-danger" onclick="deleteCustomer(\${customer.id})">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                    \`).join('');
+                    filterTable();
                 }
             } catch (error) {
                 loading.style.display = 'none';
                 console.error('Failed to load customers:', error);
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #e74c3c;">Failed to load customers. Please refresh the page.</td></tr>';
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                tbody.innerHTML = \`<tr><td colspan="7" style="text-align: center; color: #000000; padding: 20px;">
+                    <strong>Failed to load customers</strong><br>
+                    <small style="color: #666666;">\${escapeHtml(errorMessage)}</small><br>
+                    <small style="color: #666666; margin-top: 10px; display: block;">
+                        Make sure the database migration has been run: <code>npm run seedLocalD1</code>
+                    </small>
+                </td></tr>\`;
+                table.style.display = 'table';
+            }
+        }
+
+        // Filter and search table
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const companyFilter = document.getElementById('companyFilter').value;
+            const table = document.getElementById('customersTable');
+            const tbody = document.getElementById('customersTableBody');
+            const emptyState = document.getElementById('emptyState');
+            const noResultsState = document.getElementById('noResultsState');
+            const resultsCount = document.getElementById('resultsCount');
+
+            let filteredCustomers = allCustomers.filter(customer => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    customer.first_name.toLowerCase().includes(searchTerm) ||
+                    customer.last_name.toLowerCase().includes(searchTerm) ||
+                    customer.email.toLowerCase().includes(searchTerm) ||
+                    (customer.phone && customer.phone.toLowerCase().includes(searchTerm)) ||
+                    (customer.company_name && customer.company_name.toLowerCase().includes(searchTerm));
+
+                // Company filter
+                const matchesCompany = !companyFilter || 
+                    (companyFilter && customer.company_id && customer.company_id.toString() === companyFilter);
+
+                return matchesSearch && matchesCompany;
+            });
+
+            if (allCustomers.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                noResultsState.style.display = 'none';
+                resultsCount.textContent = '';
+            } else if (filteredCustomers.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'none';
+                noResultsState.style.display = 'block';
+                resultsCount.textContent = '';
+            } else {
+                table.style.display = 'table';
+                emptyState.style.display = 'none';
+                noResultsState.style.display = 'none';
+                tbody.innerHTML = filteredCustomers.map(customer => \`
+                    <tr>
+                        <td>\${escapeHtml(customer.id)}</td>
+                        <td>\${escapeHtml(customer.first_name)}</td>
+                        <td>\${escapeHtml(customer.last_name)}</td>
+                        <td>\${escapeHtml(customer.email)}</td>
+                        <td>\${escapeHtml(customer.phone || '-')}</td>
+                        <td>\${escapeHtml(customer.company_name || '-')}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-edit" onclick="editCustomer(\${customer.id}, '\${escapeJs(customer.first_name)}', '\${escapeJs(customer.last_name)}', '\${escapeJs(customer.email)}', '\${escapeJs(customer.phone || '')}', \${customer.company_id || 'null'})">Edit</button>
+                                <button class="btn btn-danger" onclick="deleteCustomer(\${customer.id})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                \`).join('');
+                
+                // Update results count
+                if (searchTerm || companyFilter) {
+                    resultsCount.textContent = \`Showing \${filteredCustomers.length} of \${allCustomers.length} customers\`;
+                } else {
+                    resultsCount.textContent = \`\${allCustomers.length} customer\${allCustomers.length !== 1 ? 's' : ''}\`;
+                }
             }
         }
 
