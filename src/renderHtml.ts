@@ -459,3 +459,6 @@ export function renderDeals(username?: string) {
 	return layout("CRM - Deals", username, content, "deals");
 }
 
+// Explicit re-exports for bundlers (avoids any edge-case tree-shaking/export detection issues)
+export { renderLogin, renderHtml, renderLeads, renderDeals };
+
