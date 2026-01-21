@@ -1,757 +1,452 @@
-export function renderHtml() {
+const baseStyles = `
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background: #fff; color: #000; padding: 20px; }
+  a { color: inherit; text-decoration: none; }
+  .container { max-width: 1400px; margin: 0 auto; border: 1px solid #000; background: #fff; }
+  .header { background: #000; color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .title { font-size: 20px; font-weight: 700; }
+  .nav { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .nav a, .nav button { border: 1px solid #000; padding: 8px 12px; background: #fff; cursor: pointer; }
+  .nav a.active { background: #000; color: #fff; }
+  .nav a:hover, .nav button:hover { background: #000; color: #fff; }
+  .nav button { font: inherit; }
+  .page { padding: 20px; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .search-filter { display: flex; gap: 10px; flex-wrap: wrap; }
+  .input, select { padding: 8px 10px; border: 1px solid #000; }
+  .input:focus, select:focus { outline: none; border: 2px solid #000; }
+  .btn { padding: 10px 14px; border: 1px solid #000; background: #fff; cursor: pointer; }
+  .btn.primary { background: #000; color: #fff; }
+  .btn:hover { background: #000; color: #fff; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #000; color: #fff; }
+  th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+  tbody tr:nth-child(even) { background: #f7f7f7; }
+  tbody tr:hover { background: #f0f0f0; }
+  .actions { display: flex; gap: 8px; }
+  .empty { text-align: center; padding: 30px 10px; color: #666; }
+  .muted { color: #666; font-size: 14px; }
+  .pill { display: inline-block; padding: 4px 8px; border: 1px solid #000; font-size: 12px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
+  .modal { background: #fff; border: 2px solid #000; padding: 18px; max-width: 520px; width: 92%; max-height: 90vh; overflow-y: auto; }
+  .form-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  label { font-weight: 600; display: block; margin-bottom: 6px; }
+  .login-card { max-width: 420px; margin: 60px auto; border: 1px solid #000; padding: 22px; }
+`;
+
+function layout(title: string, username: string | undefined, bodyContent: string, active: "customers" | "leads" | "deals" | null) {
 	return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CRM - Customer Management</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #ffffff;
-            min-height: 100vh;
-            padding: 20px;
-            color: #000000;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: #ffffff;
-            border: 1px solid #000000;
-            overflow: hidden;
-        }
-
-        .header {
-            background: #000000;
-            color: #ffffff;
-            padding: 30px;
-            text-align: center;
-            border-bottom: 2px solid #000000;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .header p {
-            color: #cccccc;
-        }
-
-        .toolbar {
-            padding: 20px 30px;
-            background: #ffffff;
-            border-bottom: 1px solid #000000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .toolbar-left {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .toolbar-right {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .search-filter-container {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .search-input,
-        .filter-select {
-            padding: 8px 12px;
-            border: 1px solid #000000;
-            font-size: 14px;
-            background: #ffffff;
-            color: #000000;
-        }
-
-        .search-input {
-            min-width: 250px;
-        }
-
-        .search-input:focus,
-        .filter-select:focus {
-            outline: none;
-            border: 2px solid #000000;
-        }
-
-        .filter-select {
-            min-width: 150px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: 1px solid #000000;
-            border-radius: 0;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-            background: #ffffff;
-            color: #000000;
-        }
-
-        .btn:hover {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        .btn-primary {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        .btn-primary:hover {
-            background: #333333;
-        }
-
-        .btn-danger {
-            background: #ffffff;
-            color: #000000;
-            border-color: #000000;
-        }
-
-        .btn-danger:hover {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        .btn-edit {
-            background: #ffffff;
-            color: #000000;
-            border-color: #000000;
-        }
-
-        .btn-edit:hover {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        .btn-secondary {
-            background: #ffffff;
-            color: #000000;
-            border-color: #000000;
-        }
-
-        .btn-secondary:hover {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            padding: 20px 30px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #ffffff;
-        }
-
-        thead {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            border: 1px solid #000000;
-        }
-
-        td {
-            padding: 15px;
-            border: 1px solid #cccccc;
-        }
-
-        tbody tr:hover {
-            background: #f5f5f5;
-        }
-
-        tbody tr:nth-child(even) {
-            background: #fafafa;
-        }
-
-        tbody tr:nth-child(even):hover {
-            background: #f0f0f0;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .actions .btn {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666666;
-        }
-
-        .empty-state p {
-            font-size: 18px;
-            margin-top: 10px;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.2s;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal {
-            background: #ffffff;
-            border: 2px solid #000000;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 0 0 4px #ffffff;
-            animation: slideUp 0.3s;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #000000;
-        }
-
-        .modal-header h2 {
-            font-size: 24px;
-            color: #000000;
-            font-weight: 600;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            color: #000000;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-
-        .close-btn:hover {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #000000;
-        }
-
-        .form-group label .required {
-            color: #000000;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #000000;
-            border-radius: 0;
-            font-size: 14px;
-            background: #ffffff;
-            color: #000000;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border: 2px solid #000000;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #cccccc;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666666;
-        }
-
-        .results-count {
-            color: #666666;
-            font-size: 14px;
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .toolbar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .toolbar-left,
-            .toolbar-right {
-                width: 100%;
-            }
-
-            .search-filter-container {
-                width: 100%;
-            }
-
-            .search-input {
-                flex: 1;
-                min-width: 0;
-            }
-
-            .table-container {
-                padding: 10px;
-            }
-
-            table {
-                font-size: 12px;
-            }
-
-            th, td {
-                padding: 10px 8px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <style>${baseStyles}</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>CRM - Customer Management</h1>
-            <p>Manage your customer relationships</p>
-        </div>
+  <div class="container">
+    <div class="header">
+      <div class="title">${title}</div>
+      <div class="nav">
+        ${username ? `
+          <a href="/" class="${active === "customers" ? "active" : ""}">Customers</a>
+          <a href="/leads" class="${active === "leads" ? "active" : ""}">Leads</a>
+          <a href="/deals" class="${active === "deals" ? "active" : ""}">Deals</a>
+          <span class="muted">Hi, ${username}</span>
+          <button onclick="logout()">Logout</button>
+        ` : `<a href="/login" class="active">Login</a>`}
+      </div>
+    </div>
+    <div class="page">
+      ${bodyContent}
+    </div>
+  </div>
+  <script>
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+  </script>
+</body>
+</html>`;
+}
 
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <div class="search-filter-container">
-                    <input 
-                        type="text" 
-                        id="searchInput" 
-                        class="search-input" 
-                        placeholder="Search customers..." 
-                        oninput="filterTable()"
-                    />
-                    <select id="companyFilter" class="filter-select" onchange="filterTable()">
-                        <option value="">All Companies</option>
-                    </select>
-                </div>
-                <span id="resultsCount" class="results-count"></span>
-            </div>
-            <div class="toolbar-right">
-                <button class="btn btn-primary" onclick="openAddModal()">+ Add Customer</button>
-            </div>
-        </div>
+export function renderLogin() {
+	return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - CRM</title>
+  <style>${baseStyles}</style>
+</head>
+<body>
+  <div class="login-card">
+    <h2 style="margin-bottom:10px;">Login</h2>
+    <p class="muted" style="margin-bottom:16px;">First login creates the user automatically.</p>
+    <div class="form-grid" style="grid-template-columns: 1fr;">
+      <div>
+        <label for="username">Username</label>
+        <input id="username" class="input" />
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" type="password" class="input" />
+      </div>
+      <button class="btn primary" onclick="login()">Login</button>
+      <div id="loginError" class="muted" style="color:#c00;"></div>
+    </div>
+  </div>
+  <script>
+    async function login() {
+      const username = (document.getElementById('username') as HTMLInputElement).value.trim();
+      const password = (document.getElementById('password') as HTMLInputElement).value.trim();
+      const err = document.getElementById('loginError');
+      err.textContent = '';
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          err.textContent = data.error || 'Login failed';
+          return;
+        }
+        window.location.href = '/';
+      } catch (e) {
+        err.textContent = 'Login failed';
+      }
+    }
+  </script>
+</body>
+</html>`;
+}
 
-        <div class="table-container">
-            <div id="loading" class="loading">Loading customers...</div>
-            <table id="customersTable" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Company</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="customersTableBody">
-                </tbody>
-            </table>
-            <div id="emptyState" class="empty-state" style="display: none;">
-                <p>No customers found. Click "+ Add Customer" to get started.</p>
-            </div>
-            <div id="noResultsState" class="empty-state" style="display: none;">
-                <p>No customers match your search criteria.</p>
-            </div>
-        </div>
+export function renderHtml(username?: string) {
+	const content = `
+    <div class="toolbar">
+      <div class="search-filter">
+        <input id="searchInput" class="input" placeholder="Search customers..." oninput="filterTable()" />
+        <select id="companyFilter" onchange="filterTable()">
+          <option value="">All Companies</option>
+        </select>
+        <span id="resultsCount" class="muted"></span>
+      </div>
+      <button class="btn primary" onclick="openAddModal()">+ Add Customer</button>
+    </div>
+    <div>
+      <div id="loading" class="muted" style="padding:12px 0;">Loading customers...</div>
+      <table id="customersTable" style="display:none;">
+        <thead>
+          <tr><th>ID</th><th>First</th><th>Last</th><th>Email</th><th>Phone</th><th>Company</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="customersTableBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty" style="display:none;">No customers yet. Click + Add Customer.</div>
+      <div id="noResultsState" class="empty" style="display:none;">No customers match your search.</div>
     </div>
 
-    <!-- Add/Edit Modal -->
-    <div id="modalOverlay" class="modal-overlay" onclick="if(event.target === this) closeModal()">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 id="modalTitle">Add Customer</h2>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-            </div>
-            <form id="customerForm" onsubmit="saveCustomer(event)">
-                <input type="hidden" id="customerId" />
-                <div class="form-group">
-                    <label for="firstName">First Name <span class="required">*</span></label>
-                    <input type="text" id="firstName" required />
-                </div>
-                <div class="form-group">
-                    <label for="lastName">Last Name <span class="required">*</span></label>
-                    <input type="text" id="lastName" required />
-                </div>
-                <div class="form-group">
-                    <label for="email">Email <span class="required">*</span></label>
-                    <input type="email" id="email" required />
-                </div>
-                <div class="form-group">
-                    <label for="phone">Phone</label>
-                    <input type="text" id="phone" />
-                </div>
-                <div class="form-group">
-                    <label for="companyId">Company</label>
-                    <select id="companyId">
-                        <option value="">None</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </form>
+    <div id="modalOverlay" class="modal-overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 id="modalTitle">Add Customer</h3>
+          <button class="btn" onclick="closeModal()">Close</button>
         </div>
+        <div class="form-grid">
+          <div><label>First Name *</label><input id="firstName" class="input" /></div>
+          <div><label>Last Name *</label><input id="lastName" class="input" /></div>
+          <div><label>Email *</label><input id="email" class="input" /></div>
+          <div><label>Phone</label><input id="phone" class="input" /></div>
+          <div><label>Company</label><select id="companyId" class="input"><option value="">None</option></select></div>
+        </div>
+        <div style="margin-top:14px; display:flex; gap:10px; justify-content:flex-end;">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" onclick="saveCustomer()">Save</button>
+        </div>
+      </div>
     </div>
 
     <script>
-        let companies = [];
-        let allCustomers = [];
-        let editingCustomerId = null;
+      let companies = [];
+      let allCustomers = [];
+      let editingCustomerId = null;
 
-        // Utility functions
-        function escapeHtml(text) {
-            if (text == null) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+      function escapeHtml(t){ if(t==null) return ''; const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+      function escapeJs(t){ if(t==null) return ''; return String(t).replace(/\\\\/g,'\\\\\\\\').replace(/'/g,\"\\\\'\").replace(/\"/g,'\\\\\"').replace(/\\n/g,'\\\\n'); }
+
+      async function loadCompanies() {
+        const res = await fetch('/api/companies');
+        if(!res.ok) return;
+        companies = await res.json();
+        const sel = document.getElementById('companyId');
+        const filter = document.getElementById('companyFilter');
+        sel.innerHTML = '<option value=\"\">None</option>';
+        filter.innerHTML = '<option value=\"\">All Companies</option>';
+        companies.forEach(c=>{
+          const opt = document.createElement('option');
+          opt.value = c.id; opt.textContent = escapeHtml(c.name);
+          sel.appendChild(opt.cloneNode(true));
+          filter.appendChild(opt);
+        });
+      }
+
+      async function loadCustomers() {
+        const loading = document.getElementById('loading');
+        const table = document.getElementById('customersTable');
+        const tbody = document.getElementById('customersTableBody');
+        const empty = document.getElementById('emptyState');
+        try {
+          const res = await fetch('/api/customers');
+          if(!res.ok) throw new Error('Failed to fetch customers');
+          allCustomers = await res.json();
+          loading.style.display='none';
+          if(allCustomers.length===0){ table.style.display='none'; empty.style.display='block'; return; }
+          filterTable();
+        } catch(e){
+          loading.textContent = 'Failed to load customers';
+          console.error(e);
         }
+      }
 
-        function escapeJs(text) {
-            if (text == null) return '';
-            return String(text)
-                .replace(/\\\\/g, '\\\\\\\\')
-                .replace(/'/g, "\\\\'")
-                .replace(/"/g, '\\\\"')
-                .replace(/\\n/g, '\\\\n')
-                .replace(/\\r/g, '\\\\r')
-                .replace(/\\t/g, '\\\\t');
-        }
+      function filterTable(){
+        const term = document.getElementById('searchInput').value.toLowerCase().trim();
+        const company = document.getElementById('companyFilter').value;
+        const table = document.getElementById('customersTable');
+        const tbody = document.getElementById('customersTableBody');
+        const empty = document.getElementById('emptyState');
+        const noRes = document.getElementById('noResultsState');
+        const count = document.getElementById('resultsCount');
+        const filtered = allCustomers.filter(c=>{
+          const s = term==='' || c.first_name.toLowerCase().includes(term) || c.last_name.toLowerCase().includes(term) || c.email.toLowerCase().includes(term) || (c.company_name||'').toLowerCase().includes(term);
+          const m = !company || (c.company_id && c.company_id.toString()===company);
+          return s && m;
+        });
+        if(allCustomers.length===0){ table.style.display='none'; empty.style.display='block'; noRes.style.display='none'; count.textContent=''; return; }
+        if(filtered.length===0){ table.style.display='none'; empty.style.display='none'; noRes.style.display='block'; count.textContent=''; return; }
+        table.style.display='table'; empty.style.display='none'; noRes.style.display='none';
+        tbody.innerHTML = filtered.map(c=>\`
+          <tr>
+            <td>\${escapeHtml(c.id)}</td>
+            <td>\${escapeHtml(c.first_name)}</td>
+            <td>\${escapeHtml(c.last_name)}</td>
+            <td>\${escapeHtml(c.email)}</td>
+            <td>\${escapeHtml(c.phone||'-')}</td>
+            <td>\${escapeHtml(c.company_name||'-')}</td>
+            <td>
+              <div class="actions">
+                <button class="btn" onclick="editCustomer(\${c.id}, '\${escapeJs(c.first_name)}', '\${escapeJs(c.last_name)}', '\${escapeJs(c.email)}', '\${escapeJs(c.phone||'')}', \${c.company_id||'null'})">Edit</button>
+                <button class="btn" onclick="deleteCustomer(\${c.id})">Delete</button>
+              </div>
+            </td>
+          </tr>\`).join('');
+        count.textContent = term||company ? \`Showing \${filtered.length} of \${allCustomers.length}\` : \`\${allCustomers.length} total\`;
+      }
 
-        // Load companies for dropdown
-        async function loadCompanies() {
-            try {
-                const response = await fetch('/api/companies');
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                    console.error('Failed to load companies:', errorData.error || errorData.details);
-                    return;
-                }
-                
-                companies = await response.json();
-                const select = document.getElementById('companyId');
-                const filterSelect = document.getElementById('companyFilter');
-                
-                select.innerHTML = '<option value="">None</option>';
-                filterSelect.innerHTML = '<option value="">All Companies</option>';
-                
-                companies.forEach(company => {
-                    const option = document.createElement('option');
-                    option.value = company.id;
-                    option.textContent = escapeHtml(company.name);
-                    select.appendChild(option.cloneNode(true));
-                    filterSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Failed to load companies:', error);
-            }
-        }
+      function openAddModal(){ editingCustomerId=null; document.getElementById('modalTitle').textContent='Add Customer'; document.getElementById('firstName').value=''; document.getElementById('lastName').value=''; document.getElementById('email').value=''; document.getElementById('phone').value=''; document.getElementById('companyId').value=''; document.getElementById('modalOverlay').style.display='flex'; }
+      function editCustomer(id,f,l,e,p,companyId){ editingCustomerId=id; document.getElementById('modalTitle').textContent='Edit Customer'; document.getElementById('firstName').value=f; document.getElementById('lastName').value=l; document.getElementById('email').value=e; document.getElementById('phone').value=p||''; document.getElementById('companyId').value=companyId||''; document.getElementById('modalOverlay').style.display='flex'; }
+      function closeModal(){ document.getElementById('modalOverlay').style.display='none'; editingCustomerId=null; }
 
-        // Load customers
-        async function loadCustomers() {
-            const loading = document.getElementById('loading');
-            const table = document.getElementById('customersTable');
-            const tbody = document.getElementById('customersTableBody');
-            const emptyState = document.getElementById('emptyState');
+      async function saveCustomer(){
+        const body = {
+          first_name: (document.getElementById('firstName') as HTMLInputElement).value.trim(),
+          last_name: (document.getElementById('lastName') as HTMLInputElement).value.trim(),
+          email: (document.getElementById('email') as HTMLInputElement).value.trim(),
+          phone: (document.getElementById('phone') as HTMLInputElement).value.trim() || null,
+          company_id: (document.getElementById('companyId') as HTMLSelectElement).value || null
+        };
+        if(!body.first_name || !body.last_name || !body.email){ alert('First, last, email required'); return; }
+        const url = editingCustomerId ? \`/api/customers/\${editingCustomerId}\` : '/api/customers';
+        const method = editingCustomerId ? 'PUT' : 'POST';
+        const res = await fetch(url,{ method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+        if(!res.ok){ const d=await res.json().catch(()=>({})); alert(d.error||'Save failed'); return; }
+        closeModal(); loadCustomers();
+      }
 
-            try {
-                const response = await fetch('/api/customers');
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                    throw new Error(errorData.error || errorData.details || \`HTTP \${response.status}\`);
-                }
-                
-                allCustomers = await response.json();
+      async function deleteCustomer(id){
+        if(!confirm('Delete customer?')) return;
+        const res = await fetch(\`/api/customers/\${id}\`,{method:'DELETE'});
+        if(!res.ok){ const d=await res.json().catch(()=>({})); alert(d.error||'Delete failed'); return; }
+        loadCustomers();
+      }
 
-                loading.style.display = 'none';
-
-                if (allCustomers.length === 0) {
-                    table.style.display = 'none';
-                    emptyState.style.display = 'block';
-                    document.getElementById('noResultsState').style.display = 'none';
-                    document.getElementById('resultsCount').textContent = '';
-                } else {
-                    filterTable();
-                }
-            } catch (error) {
-                loading.style.display = 'none';
-                console.error('Failed to load customers:', error);
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                tbody.innerHTML = \`<tr><td colspan="7" style="text-align: center; color: #000000; padding: 20px;">
-                    <strong>Failed to load customers</strong><br>
-                    <small style="color: #666666;">\${escapeHtml(errorMessage)}</small><br>
-                    <small style="color: #666666; margin-top: 10px; display: block;">
-                        Make sure the database migration has been run: <code>npm run seedLocalD1</code>
-                    </small>
-                </td></tr>\`;
-                table.style.display = 'table';
-            }
-        }
-
-        // Filter and search table
-        function filterTable() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const companyFilter = document.getElementById('companyFilter').value;
-            const table = document.getElementById('customersTable');
-            const tbody = document.getElementById('customersTableBody');
-            const emptyState = document.getElementById('emptyState');
-            const noResultsState = document.getElementById('noResultsState');
-            const resultsCount = document.getElementById('resultsCount');
-
-            let filteredCustomers = allCustomers.filter(customer => {
-                // Search filter
-                const matchesSearch = !searchTerm || 
-                    customer.first_name.toLowerCase().includes(searchTerm) ||
-                    customer.last_name.toLowerCase().includes(searchTerm) ||
-                    customer.email.toLowerCase().includes(searchTerm) ||
-                    (customer.phone && customer.phone.toLowerCase().includes(searchTerm)) ||
-                    (customer.company_name && customer.company_name.toLowerCase().includes(searchTerm));
-
-                // Company filter
-                const matchesCompany = !companyFilter || 
-                    (companyFilter && customer.company_id && customer.company_id.toString() === companyFilter);
-
-                return matchesSearch && matchesCompany;
-            });
-
-            if (allCustomers.length === 0) {
-                table.style.display = 'none';
-                emptyState.style.display = 'block';
-                noResultsState.style.display = 'none';
-                resultsCount.textContent = '';
-            } else if (filteredCustomers.length === 0) {
-                table.style.display = 'none';
-                emptyState.style.display = 'none';
-                noResultsState.style.display = 'block';
-                resultsCount.textContent = '';
-            } else {
-                table.style.display = 'table';
-                emptyState.style.display = 'none';
-                noResultsState.style.display = 'none';
-                tbody.innerHTML = filteredCustomers.map(customer => \`
-                    <tr>
-                        <td>\${escapeHtml(customer.id)}</td>
-                        <td>\${escapeHtml(customer.first_name)}</td>
-                        <td>\${escapeHtml(customer.last_name)}</td>
-                        <td>\${escapeHtml(customer.email)}</td>
-                        <td>\${escapeHtml(customer.phone || '-')}</td>
-                        <td>\${escapeHtml(customer.company_name || '-')}</td>
-                        <td>
-                            <div class="actions">
-                                <button class="btn btn-edit" onclick="editCustomer(\${customer.id}, '\${escapeJs(customer.first_name)}', '\${escapeJs(customer.last_name)}', '\${escapeJs(customer.email)}', '\${escapeJs(customer.phone || '')}', \${customer.company_id || 'null'})">Edit</button>
-                                <button class="btn btn-danger" onclick="deleteCustomer(\${customer.id})">Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                \`).join('');
-                
-                // Update results count
-                if (searchTerm || companyFilter) {
-                    resultsCount.textContent = \`Showing \${filteredCustomers.length} of \${allCustomers.length} customers\`;
-                } else {
-                    resultsCount.textContent = \`\${allCustomers.length} customer\${allCustomers.length !== 1 ? 's' : ''}\`;
-                }
-            }
-        }
-
-        // Modal functions
-        function openAddModal() {
-            editingCustomerId = null;
-            document.getElementById('modalTitle').textContent = 'Add Customer';
-            document.getElementById('customerForm').reset();
-            document.getElementById('customerId').value = '';
-            document.getElementById('companyId').value = '';
-            document.getElementById('modalOverlay').classList.add('active');
-        }
-
-        function editCustomer(id, firstName, lastName, email, phone, companyId) {
-            editingCustomerId = id;
-            document.getElementById('modalTitle').textContent = 'Edit Customer';
-            document.getElementById('customerId').value = id;
-            document.getElementById('firstName').value = firstName;
-            document.getElementById('lastName').value = lastName;
-            document.getElementById('email').value = email;
-            document.getElementById('phone').value = phone || '';
-            document.getElementById('companyId').value = companyId || '';
-            document.getElementById('modalOverlay').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('modalOverlay').classList.remove('active');
-            editingCustomerId = null;
-        }
-
-        // Save customer (add or update)
-        async function saveCustomer(event) {
-            event.preventDefault();
-
-            const formData = {
-                first_name: document.getElementById('firstName').value.trim(),
-                last_name: document.getElementById('lastName').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                phone: document.getElementById('phone').value.trim() || null,
-                company_id: document.getElementById('companyId').value ? parseInt(document.getElementById('companyId').value) : null
-            };
-
-            try {
-                const url = editingCustomerId 
-                    ? \`/api/customers/\${editingCustomerId}\`
-                    : '/api/customers';
-                
-                const method = editingCustomerId ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    alert(error.error || 'Failed to save customer');
-                    return;
-                }
-
-                closeModal();
-                await loadCustomers();
-            } catch (error) {
-                console.error('Failed to save customer:', error);
-                alert('Failed to save customer. Please try again.');
-            }
-        }
-
-        // Delete customer
-        async function deleteCustomer(id) {
-            if (!confirm('Are you sure you want to delete this customer?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(\`/api/customers/\${id}\`, {
-                    method: 'DELETE'
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    alert(error.error || 'Failed to delete customer');
-                    return;
-                }
-
-                await loadCustomers();
-            } catch (error) {
-                console.error('Failed to delete customer:', error);
-                alert('Failed to delete customer. Please try again.');
-            }
-        }
-
-        // Initialize on page load
-        async function init() {
-            await loadCompanies();
-            await loadCustomers();
-        }
-
-        init();
+      loadCompanies(); loadCustomers();
     </script>
-</body>
-</html>
-`;
+  `;
+	return layout("CRM - Customers", username, content, "customers");
 }
+
+export function renderLeads(username?: string) {
+	const content = `
+    <div class="toolbar">
+      <div class="search-filter">
+        <input id="leadSearch" class="input" placeholder="Search leads..." oninput="filterLeads()" />
+        <select id="leadStatusFilter" onchange="filterLeads()">
+          <option value="">All Statuses</option>
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="qualified">Qualified</option>
+        </select>
+      </div>
+      <button class="btn primary" onclick="openLeadModal()">+ Add Lead</button>
+    </div>
+    <div>
+      <div id="leadLoading" class="muted" style="padding:12px 0;">Loading leads...</div>
+      <table id="leadsTable" style="display:none;">
+        <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead>
+        <tbody id="leadsBody"></tbody>
+      </table>
+      <div id="leadsEmpty" class="empty" style="display:none;">No leads yet.</div>
+      <div id="leadsNoRes" class="empty" style="display:none;">No leads match your search.</div>
+    </div>
+
+    <div id="leadModal" class="modal-overlay" onclick="if(event.target===this) closeLeadModal()">
+      <div class="modal">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 id="leadModalTitle">Add Lead</h3>
+          <button class="btn" onclick="closeLeadModal()">Close</button>
+        </div>
+        <div class="form-grid">
+          <div><label>First Name *</label><input id="leadFirst" class="input"/></div>
+          <div><label>Last Name *</label><input id="leadLast" class="input"/></div>
+          <div><label>Email *</label><input id="leadEmail" class="input"/></div>
+          <div><label>Phone</label><input id="leadPhone" class="input"/></div>
+          <div><label>Company</label><input id="leadCompany" class="input"/></div>
+          <div><label>Status</label><select id="leadStatus" class="input"><option value="new">New</option><option value="contacted">Contacted</option><option value="qualified">Qualified</option></select></div>
+          <div><label>Source</label><input id="leadSource" class="input"/></div>
+          <div style="grid-column:1/-1;"><label>Notes</label><input id="leadNotes" class="input"/></div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn" onclick="closeLeadModal()">Cancel</button>
+          <button class="btn primary" onclick="saveLead()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let leads = []; let editingLeadId = null;
+      function escapeHtml(t){ if(t==null) return ''; const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+      function escapeJs(t){ if(t==null) return ''; return String(t).replace(/\\\\/g,'\\\\\\\\').replace(/'/g,\"\\\\'\").replace(/\"/g,'\\\\\"').replace(/\\n/g,'\\\\n'); }
+
+      async function loadLeads(){
+        const l=document.getElementById('leadLoading'); const table=document.getElementById('leadsTable'); const empty=document.getElementById('leadsEmpty');
+        try{
+          const res=await fetch('/api/leads');
+          if(!res.ok) throw new Error('Failed to load leads');
+          leads=await res.json(); l.style.display='none';
+          if(leads.length===0){ table.style.display='none'; empty.style.display='block'; return; }
+          filterLeads();
+        }catch(e){ l.textContent='Failed to load leads'; console.error(e); }
+      }
+
+      function filterLeads(){
+        const term=(document.getElementById('leadSearch') as HTMLInputElement).value.toLowerCase().trim();
+        const status=(document.getElementById('leadStatusFilter') as HTMLSelectElement).value;
+        const table=document.getElementById('leadsTable'); const body=document.getElementById('leadsBody'); const empty=document.getElementById('leadsEmpty'); const noRes=document.getElementById('leadsNoRes');
+        const filtered=leads.filter(l=>{
+          const s=term==='' || l.first_name.toLowerCase().includes(term) || l.last_name.toLowerCase().includes(term) || l.email.toLowerCase().includes(term) || (l.company||'').toLowerCase().includes(term);
+          const st=!status || l.status===status;
+          return s && st;
+        });
+        if(leads.length===0){ table.style.display='none'; empty.style.display='block'; noRes.style.display='none'; return; }
+        if(filtered.length===0){ table.style.display='none'; empty.style.display='none'; noRes.style.display='block'; return; }
+        table.style.display='table'; empty.style.display='none'; noRes.style.display='none';
+        body.innerHTML = filtered.map(l=>\`
+          <tr>
+            <td>\${escapeHtml(l.id)}</td>
+            <td>\${escapeHtml(l.first_name)} \${escapeHtml(l.last_name)}</td>
+            <td>\${escapeHtml(l.email)}</td>
+            <td>\${escapeHtml(l.phone||'-')}</td>
+            <td>\${escapeHtml(l.company||'-')}</td>
+            <td><span class="pill">\${escapeHtml(l.status||'new')}</span></td>
+            <td>\${escapeHtml(l.source||'-')}</td>
+            <td>
+              <div class="actions">
+                <button class="btn" onclick="editLead(\${l.id}, '\${escapeJs(l.first_name)}', '\${escapeJs(l.last_name)}', '\${escapeJs(l.email)}', '\${escapeJs(l.phone||'')}', '\${escapeJs(l.company||'')}', '\${escapeJs(l.status||'new')}', '\${escapeJs(l.source||'')}', '\${escapeJs(l.notes||'')}')">Edit</button>
+                <button class="btn" onclick="deleteLead(\${l.id})">Delete</button>
+              </div>
+            </td>
+          </tr>\`).join('');
+      }
+
+      function openLeadModal(){ editingLeadId=null; document.getElementById('leadModalTitle').textContent='Add Lead'; setLeadForm(); document.getElementById('leadModal').style.display='flex'; }
+      function editLead(id,f,l,e,p,c,status,source,notes){ editingLeadId=id; document.getElementById('leadModalTitle').textContent='Edit Lead'; setLeadForm({f,l,e,p,c,status,source,notes}); document.getElementById('leadModal').style.display='flex'; }
+      function setLeadForm(v={f:'',l:'',e:'',p:'',c:'',status:'new',source:'',notes:''}){ (document.getElementById('leadFirst') as HTMLInputElement).value=v.f||''; (document.getElementById('leadLast') as HTMLInputElement).value=v.l||''; (document.getElementById('leadEmail') as HTMLInputElement).value=v.e||''; (document.getElementById('leadPhone') as HTMLInputElement).value=v.p||''; (document.getElementById('leadCompany') as HTMLInputElement).value=v.c||''; (document.getElementById('leadStatus') as HTMLSelectElement).value=v.status||'new'; (document.getElementById('leadSource') as HTMLInputElement).value=v.source||''; (document.getElementById('leadNotes') as HTMLInputElement).value=v.notes||''; }
+      function closeLeadModal(){ document.getElementById('leadModal').style.display='none'; editingLeadId=null; }
+
+      async function saveLead(){
+        const body = {
+          first_name: (document.getElementById('leadFirst') as HTMLInputElement).value.trim(),
+          last_name: (document.getElementById('leadLast') as HTMLInputElement).value.trim(),
+          email: (document.getElementById('leadEmail') as HTMLInputElement).value.trim(),
+          phone: (document.getElementById('leadPhone') as HTMLInputElement).value.trim()||null,
+          company: (document.getElementById('leadCompany') as HTMLInputElement).value.trim()||null,
+          status: (document.getElementById('leadStatus') as HTMLSelectElement).value || 'new',
+          source: (document.getElementById('leadSource') as HTMLInputElement).value.trim()||null,
+          notes: (document.getElementById('leadNotes') as HTMLInputElement).value.trim()||null,
+        };
+        if(!body.first_name || !body.last_name || !body.email){ alert('First, last, email required'); return; }
+        const url = editingLeadId ? \`/api/leads/\${editingLeadId}\` : '/api/leads';
+        const method = editingLeadId ? 'PUT' : 'POST';
+        const res = await fetch(url,{method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+        if(!res.ok){ const d=await res.json().catch(()=>({})); alert(d.error||'Save failed'); return; }
+        closeLeadModal(); loadLeads();
+      }
+
+      async function deleteLead(id){
+        if(!confirm('Delete lead?')) return;
+        const res = await fetch(\`/api/leads/\${id}\`,{method:'DELETE'});
+        if(!res.ok){ const d=await res.json().catch(()=>({})); alert(d.error||'Delete failed'); return; }
+        loadLeads();
+      }
+
+      loadLeads();
+    </script>
+  `;
+	return layout("CRM - Leads", username, content, "leads");
+}
+
+export function renderDeals(username?: string) {
+	const content = `
+    <div class="toolbar">
+      <div class="muted">Deals (read-only list)</div>
+    </div>
+    <div>
+      <div id="dealLoading" class="muted" style="padding:12px 0;">Loading deals...</div>
+      <table id="dealsTable" style="display:none;">
+        <thead><tr><th>Title</th><th>Customer</th><th>Company</th><th>Value</th><th>Stage</th><th>Probability</th><th>Expected Close</th></tr></thead>
+        <tbody id="dealsBody"></tbody>
+      </table>
+      <div id="dealsEmpty" class="empty" style="display:none;">No deals yet.</div>
+    </div>
+    <script>
+      function escapeHtml(t){ if(t==null) return ''; const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+      async function loadDeals(){
+        const l=document.getElementById('dealLoading'); const table=document.getElementById('dealsTable'); const body=document.getElementById('dealsBody'); const empty=document.getElementById('dealsEmpty');
+        try{
+          const res=await fetch('/api/deals');
+          if(!res.ok) throw new Error('Failed to load deals');
+          const deals=await res.json(); l.style.display='none';
+          if(deals.length===0){ table.style.display='none'; empty.style.display='block'; return; }
+          table.style.display='table';
+          body.innerHTML = deals.map(d=>\`
+            <tr>
+              <td>\${escapeHtml(d.title)}</td>
+              <td>\${escapeHtml(d.customer_name||'-')}</td>
+              <td>\${escapeHtml(d.company_name||'-')}</td>
+              <td>\${d.value!=null ? '$'+d.value : '-'}</td>
+              <td><span class="pill">\${escapeHtml(d.stage)}</span></td>
+              <td>\${d.probability!=null ? d.probability+'%' : '-'}</td>
+              <td>\${escapeHtml(d.expected_close_date||'-')}</td>
+            </tr>\`).join('');
+        }catch(e){ l.textContent='Failed to load deals'; console.error(e); }
+      }
+      loadDeals();
+    </script>
+  `;
+	return layout("CRM - Deals", username, content, "deals");
+}
+
