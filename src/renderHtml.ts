@@ -101,8 +101,8 @@ export function renderLogin() {
   </div>
   <script>
     async function login() {
-      const username = (document.getElementById('username') as HTMLInputElement).value.trim();
-      const password = (document.getElementById('password') as HTMLInputElement).value.trim();
+      const username = (document.getElementById('username') || { value: '' }).value.trim();
+      const password = (document.getElementById('password') || { value: '' }).value.trim();
       const err = document.getElementById('loginError');
       err.textContent = '';
       try {
@@ -118,9 +118,14 @@ export function renderLogin() {
         }
         window.location.href = '/';
       } catch (e) {
-        err.textContent = 'Login failed';
+        err.textContent = 'Login failed (network or server error)';
       }
     }
+
+    // Allow Enter-to-submit
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') login();
+    });
   </script>
 </body>
 </html>`;
@@ -252,11 +257,11 @@ export function renderHtml(username?: string) {
 
       async function saveCustomer(){
         const body = {
-          first_name: (document.getElementById('firstName') as HTMLInputElement).value.trim(),
-          last_name: (document.getElementById('lastName') as HTMLInputElement).value.trim(),
-          email: (document.getElementById('email') as HTMLInputElement).value.trim(),
-          phone: (document.getElementById('phone') as HTMLInputElement).value.trim() || null,
-          company_id: (document.getElementById('companyId') as HTMLSelectElement).value || null
+          first_name: (document.getElementById('firstName') || { value: '' }).value.trim(),
+          last_name: (document.getElementById('lastName') || { value: '' }).value.trim(),
+          email: (document.getElementById('email') || { value: '' }).value.trim(),
+          phone: ((document.getElementById('phone') || { value: '' }).value.trim()) || null,
+          company_id: ((document.getElementById('companyId') || { value: '' }).value) || null
         };
         if(!body.first_name || !body.last_name || !body.email){ alert('First, last, email required'); return; }
         const url = editingCustomerId ? \`/api/customers/\${editingCustomerId}\` : '/api/customers';
@@ -343,8 +348,8 @@ export function renderLeads(username?: string) {
       }
 
       function filterLeads(){
-        const term=(document.getElementById('leadSearch') as HTMLInputElement).value.toLowerCase().trim();
-        const status=(document.getElementById('leadStatusFilter') as HTMLSelectElement).value;
+        const term=((document.getElementById('leadSearch') || { value: '' }).value).toLowerCase().trim();
+        const status=((document.getElementById('leadStatusFilter') || { value: '' }).value);
         const table=document.getElementById('leadsTable'); const body=document.getElementById('leadsBody'); const empty=document.getElementById('leadsEmpty'); const noRes=document.getElementById('leadsNoRes');
         const filtered=leads.filter(l=>{
           const s=term==='' || l.first_name.toLowerCase().includes(term) || l.last_name.toLowerCase().includes(term) || l.email.toLowerCase().includes(term) || (l.company||'').toLowerCase().includes(term);
@@ -374,19 +379,23 @@ export function renderLeads(username?: string) {
 
       function openLeadModal(){ editingLeadId=null; document.getElementById('leadModalTitle').textContent='Add Lead'; setLeadForm(); document.getElementById('leadModal').style.display='flex'; }
       function editLead(id,f,l,e,p,c,status,source,notes){ editingLeadId=id; document.getElementById('leadModalTitle').textContent='Edit Lead'; setLeadForm({f,l,e,p,c,status,source,notes}); document.getElementById('leadModal').style.display='flex'; }
-      function setLeadForm(v={f:'',l:'',e:'',p:'',c:'',status:'new',source:'',notes:''}){ (document.getElementById('leadFirst') as HTMLInputElement).value=v.f||''; (document.getElementById('leadLast') as HTMLInputElement).value=v.l||''; (document.getElementById('leadEmail') as HTMLInputElement).value=v.e||''; (document.getElementById('leadPhone') as HTMLInputElement).value=v.p||''; (document.getElementById('leadCompany') as HTMLInputElement).value=v.c||''; (document.getElementById('leadStatus') as HTMLSelectElement).value=v.status||'new'; (document.getElementById('leadSource') as HTMLInputElement).value=v.source||''; (document.getElementById('leadNotes') as HTMLInputElement).value=v.notes||''; }
+      function setLeadForm(v={f:'',l:'',e:'',p:'',c:'',status:'new',source:'',notes:''}){
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+        setVal('leadFirst', v.f||''); setVal('leadLast', v.l||''); setVal('leadEmail', v.e||''); setVal('leadPhone', v.p||''); setVal('leadCompany', v.c||'');
+        setVal('leadStatus', v.status||'new'); setVal('leadSource', v.source||''); setVal('leadNotes', v.notes||'');
+      }
       function closeLeadModal(){ document.getElementById('leadModal').style.display='none'; editingLeadId=null; }
 
       async function saveLead(){
         const body = {
-          first_name: (document.getElementById('leadFirst') as HTMLInputElement).value.trim(),
-          last_name: (document.getElementById('leadLast') as HTMLInputElement).value.trim(),
-          email: (document.getElementById('leadEmail') as HTMLInputElement).value.trim(),
-          phone: (document.getElementById('leadPhone') as HTMLInputElement).value.trim()||null,
-          company: (document.getElementById('leadCompany') as HTMLInputElement).value.trim()||null,
-          status: (document.getElementById('leadStatus') as HTMLSelectElement).value || 'new',
-          source: (document.getElementById('leadSource') as HTMLInputElement).value.trim()||null,
-          notes: (document.getElementById('leadNotes') as HTMLInputElement).value.trim()||null,
+          first_name: (document.getElementById('leadFirst') || { value: '' }).value.trim(),
+          last_name: (document.getElementById('leadLast') || { value: '' }).value.trim(),
+          email: (document.getElementById('leadEmail') || { value: '' }).value.trim(),
+          phone: ((document.getElementById('leadPhone') || { value: '' }).value.trim())||null,
+          company: ((document.getElementById('leadCompany') || { value: '' }).value.trim())||null,
+          status: ((document.getElementById('leadStatus') || { value: 'new' }).value) || 'new',
+          source: ((document.getElementById('leadSource') || { value: '' }).value.trim())||null,
+          notes: ((document.getElementById('leadNotes') || { value: '' }).value.trim())||null,
         };
         if(!body.first_name || !body.last_name || !body.email){ alert('First, last, email required'); return; }
         const url = editingLeadId ? \`/api/leads/\${editingLeadId}\` : '/api/leads';
