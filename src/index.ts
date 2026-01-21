@@ -1,46 +1,9 @@
-import { renderHtml, renderLogin, renderLeads, renderDeals } from "./renderHtml";
-
-// Simple session management using cookies
-function getSessionId(request: Request): string | null {
-	const cookieHeader = request.headers.get("Cookie");
-	if (!cookieHeader) return null;
-	const cookies = cookieHeader.split(";").map(c => c.trim());
-	const sessionCookie = cookies.find(c => c.startsWith("session="));
-	return sessionCookie ? sessionCookie.split("=")[1] : null;
-}
-
-function setSessionCookie(sessionId: string): string {
-	return `session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`;
-}
-
-function clearSessionCookie(): string {
-	return `session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
-}
+import { renderHtml, renderLeads, renderDeals } from "./renderHtml";
 
 // Auto-migration function - creates tables if they don't exist
 async function ensureTablesExist(env: Env): Promise<void> {
 	try {
-		// Always ensure auth tables exist (safe to run every request because of IF NOT EXISTS)
-		await env.DB.prepare(`
-			CREATE TABLE IF NOT EXISTS users (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				username TEXT NOT NULL UNIQUE,
-				password_hash TEXT NOT NULL,
-				is_admin INTEGER DEFAULT 0,
-				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-			)
-		`).run();
-
-		await env.DB.prepare(`
-			CREATE TABLE IF NOT EXISTS sessions (
-				id TEXT PRIMARY KEY,
-				user_id INTEGER NOT NULL,
-				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-				expires_at DATETIME NOT NULL,
-				FOREIGN KEY (user_id) REFERENCES users(id)
-			)
-		`).run();
-
+		// Always ensure leads table exists (safe to run every request because of IF NOT EXISTS)
 		await env.DB.prepare(`
 			CREATE TABLE IF NOT EXISTS leads (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -206,44 +169,6 @@ async function ensureTablesExist(env: Env): Promise<void> {
 	}
 }
 
-// Simple password hashing (for demo - use proper hashing in production)
-async function hashPassword(password: string): Promise<string> {
-	const encoder = new TextEncoder();
-	const data = encoder.encode(password);
-	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-	const hashArray = Array.from(new Uint8Array(hashBuffer));
-	return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-	const passwordHash = await hashPassword(password);
-	return passwordHash === hash;
-}
-
-// Authentication middleware
-async function checkAuth(request: Request, env: Env): Promise<{ userId: number; username: string } | null> {
-	const sessionId = getSessionId(request);
-	if (!sessionId) return null;
-
-	try {
-		const stmt = env.DB.prepare(`
-			SELECT s.user_id, u.username 
-			FROM sessions s
-			JOIN users u ON s.user_id = u.id
-			WHERE s.id = ? AND s.expires_at > datetime('now')
-		`).bind(sessionId);
-		const result = await stmt.first<{ user_id: number; username: string }>();
-		return result ? { userId: result.user_id, username: result.username } : null;
-	} catch (error) {
-		console.error("Auth check error:", error);
-		return null;
-	}
-}
-
-function generateSessionId(): string {
-	return crypto.randomUUID();
-}
-
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		// Ensure tables exist before processing any request
@@ -251,125 +176,6 @@ export default {
 		const url = new URL(request.url);
 		const path = url.pathname;
 		const method = request.method;
-
-		// Public routes - login and API login
-		if (path === "/login" || path === "/api/login") {
-			if (method === "GET") {
-				return new Response(renderLogin(), {
-					headers: { "content-type": "text/html" },
-				});
-			}
-
-			if (method === "POST") {
-				try {
-					const body = await request.json() as { username: string; password: string };
-					if (!body.username || !body.password) {
-						return new Response(JSON.stringify({ error: "Username and password required" }), {
-							status: 400,
-							headers: { "content-type": "application/json" },
-						});
-					}
-					
-					// Check if any users exist
-					const userCount = await env.DB.prepare("SELECT COUNT(*) as count FROM users").first<{ count: number }>();
-					
-					if (!userCount || userCount.count === 0) {
-						// Create first user as admin
-						const passwordHash = await hashPassword(body.password);
-						const stmt = env.DB.prepare(`
-							INSERT INTO users (username, password_hash, is_admin)
-							VALUES (?, ?, 1)
-						`).bind(body.username, passwordHash);
-						await stmt.run();
-						
-						const newUser = await env.DB.prepare("SELECT id, username FROM users WHERE username = ?")
-							.bind(body.username)
-							.first<{ id: number; username: string }>();
-						
-						if (!newUser) {
-							return new Response(JSON.stringify({ error: "Failed to create user" }), {
-								status: 500,
-								headers: { "content-type": "application/json" },
-							});
-						}
-
-						// Create session
-						const sessionId = generateSessionId();
-						const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-						await env.DB.prepare(`
-							INSERT INTO sessions (id, user_id, expires_at)
-							VALUES (?, ?, ?)
-						`).bind(sessionId, newUser.id, expiresAt).run();
-
-						return new Response(JSON.stringify({ success: true, message: "User created and logged in" }), {
-							headers: {
-								"content-type": "application/json",
-								"Set-Cookie": setSessionCookie(sessionId),
-							},
-						});
-					}
-
-					// Normal login
-					const user = await env.DB.prepare("SELECT id, username, password_hash FROM users WHERE username = ?")
-						.bind(body.username)
-						.first<{ id: number; username: string; password_hash: string }>();
-
-					if (!user || !(await verifyPassword(body.password, user.password_hash))) {
-						return new Response(JSON.stringify({ error: "Invalid credentials" }), {
-							status: 401,
-							headers: { "content-type": "application/json" },
-						});
-					}
-
-					// Create session
-					const sessionId = generateSessionId();
-					const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-					await env.DB.prepare(`
-						INSERT INTO sessions (id, user_id, expires_at)
-						VALUES (?, ?, ?)
-					`).bind(sessionId, user.id, expiresAt).run();
-
-					return new Response(JSON.stringify({ success: true }), {
-						headers: {
-							"content-type": "application/json",
-							"Set-Cookie": setSessionCookie(sessionId),
-						},
-					});
-				} catch (error) {
-					console.error("Login error:", error);
-					return new Response(JSON.stringify({ error: "Login failed" }), {
-						status: 500,
-						headers: { "content-type": "application/json" },
-					});
-				}
-			}
-		}
-
-		// Logout
-		if (path === "/api/logout" && method === "POST") {
-			const sessionId = getSessionId(request);
-			if (sessionId) {
-				await env.DB.prepare("DELETE FROM sessions WHERE id = ?").bind(sessionId).run();
-			}
-			return new Response(JSON.stringify({ success: true }), {
-				headers: {
-					"content-type": "application/json",
-					"Set-Cookie": clearSessionCookie(),
-				},
-			});
-		}
-
-		// Check authentication for all other routes
-		const auth = await checkAuth(request, env);
-		if (!auth) {
-			if (path.startsWith("/api/")) {
-				return new Response(JSON.stringify({ error: "Unauthorized" }), {
-					status: 401,
-					headers: { "content-type": "application/json" },
-				});
-			}
-			return Response.redirect(new URL("/login", url), 302);
-		}
 
 		// API Routes
 		if (path.startsWith("/api/")) {
@@ -760,19 +566,19 @@ export default {
 
 		// Page routes
 		if (path === "/") {
-			return new Response(renderHtml(auth.username), {
+			return new Response(renderHtml(), {
 				headers: { "content-type": "text/html" },
 			});
 		}
 
 		if (path === "/leads") {
-			return new Response(renderLeads(auth.username), {
+			return new Response(renderLeads(), {
 				headers: { "content-type": "text/html" },
 			});
 		}
 
 		if (path === "/deals") {
-			return new Response(renderDeals(auth.username), {
+			return new Response(renderDeals(), {
 				headers: { "content-type": "text/html" },
 			});
 		}

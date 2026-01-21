@@ -49,89 +49,20 @@ function layout(title: string, username: string | undefined, bodyContent: string
     <div class="header">
       <div class="title">${title}</div>
       <div class="nav">
-        ${username ? `
-          <a href="/" class="${active === "customers" ? "active" : ""}">Customers</a>
-          <a href="/leads" class="${active === "leads" ? "active" : ""}">Leads</a>
-          <a href="/deals" class="${active === "deals" ? "active" : ""}">Deals</a>
-          <span class="muted">Hi, ${username}</span>
-          <button onclick="logout()">Logout</button>
-        ` : `<a href="/login" class="active">Login</a>`}
+        <a href="/" class="${active === "customers" ? "active" : ""}">Customers</a>
+        <a href="/leads" class="${active === "leads" ? "active" : ""}">Leads</a>
+        <a href="/deals" class="${active === "deals" ? "active" : ""}">Deals</a>
       </div>
     </div>
     <div class="page">
       ${bodyContent}
     </div>
   </div>
-  <script>
-    async function logout() {
-      await fetch('/api/logout', { method: 'POST' });
-      window.location.href = '/login';
-    }
-  </script>
 </body>
 </html>`;
 }
 
-export function renderLogin() {
-	return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - CRM</title>
-  <style>${baseStyles}</style>
-</head>
-<body>
-  <div class="login-card">
-    <h2 style="margin-bottom:10px;">Login</h2>
-    <p class="muted" style="margin-bottom:16px;">First login creates the user automatically.</p>
-    <div class="form-grid" style="grid-template-columns: 1fr;">
-      <div>
-        <label for="username">Username</label>
-        <input id="username" class="input" />
-      </div>
-      <div>
-        <label for="password">Password</label>
-        <input id="password" type="password" class="input" />
-      </div>
-      <button class="btn primary" onclick="login()">Login</button>
-      <div id="loginError" class="muted" style="color:#c00;"></div>
-    </div>
-  </div>
-  <script>
-    async function login() {
-      const username = (document.getElementById('username') || { value: '' }).value.trim();
-      const password = (document.getElementById('password') || { value: '' }).value.trim();
-      const err = document.getElementById('loginError');
-      err.textContent = '';
-      try {
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          err.textContent = data.error || 'Login failed';
-          return;
-        }
-        window.location.href = '/';
-      } catch (e) {
-        err.textContent = 'Login failed (network or server error)';
-      }
-    }
-
-    // Allow Enter-to-submit
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') login();
-    });
-  </script>
-</body>
-</html>`;
-}
-
-export function renderHtml(username?: string) {
+export function renderHtml() {
 	const content = `
     <div class="toolbar">
       <div class="search-filter">
@@ -281,10 +212,10 @@ export function renderHtml(username?: string) {
       loadCompanies(); loadCustomers();
     </script>
   `;
-	return layout("CRM - Customers", username, content, "customers");
+	return layout("CRM - Customers", undefined, content, "customers");
 }
 
-export function renderLeads(username?: string) {
+export function renderLeads() {
 	const content = `
     <div class="toolbar">
       <div class="search-filter">
@@ -415,10 +346,10 @@ export function renderLeads(username?: string) {
       loadLeads();
     </script>
   `;
-	return layout("CRM - Leads", username, content, "leads");
+	return layout("CRM - Leads", undefined, content, "leads");
 }
 
-export function renderDeals(username?: string) {
+export function renderDeals() {
 	const content = `
     <div class="toolbar">
       <div class="muted">Deals (read-only list)</div>
@@ -456,9 +387,9 @@ export function renderDeals(username?: string) {
       loadDeals();
     </script>
   `;
-	return layout("CRM - Deals", username, content, "deals");
+	return layout("CRM - Deals", undefined, content, "deals");
 }
 
 // Explicit re-exports for bundlers (avoids any edge-case tree-shaking/export detection issues)
-export { renderLogin, renderHtml, renderLeads, renderDeals };
+export { renderHtml, renderLeads, renderDeals };
 
