@@ -20,6 +20,43 @@ function clearSessionCookie(): string {
 // Auto-migration function - creates tables if they don't exist
 async function ensureTablesExist(env: Env): Promise<void> {
 	try {
+		// Always ensure auth tables exist (safe to run every request because of IF NOT EXISTS)
+		await env.DB.prepare(`
+			CREATE TABLE IF NOT EXISTS users (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				username TEXT NOT NULL UNIQUE,
+				password_hash TEXT NOT NULL,
+				is_admin INTEGER DEFAULT 0,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			)
+		`).run();
+
+		await env.DB.prepare(`
+			CREATE TABLE IF NOT EXISTS sessions (
+				id TEXT PRIMARY KEY,
+				user_id INTEGER NOT NULL,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+				expires_at DATETIME NOT NULL,
+				FOREIGN KEY (user_id) REFERENCES users(id)
+			)
+		`).run();
+
+		await env.DB.prepare(`
+			CREATE TABLE IF NOT EXISTS leads (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				first_name TEXT NOT NULL,
+				last_name TEXT NOT NULL,
+				email TEXT NOT NULL,
+				phone TEXT,
+				company TEXT,
+				status TEXT DEFAULT 'new',
+				source TEXT,
+				notes TEXT,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+				updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			)
+		`).run();
+
 		// Check if customers table exists
 		const checkStmt = env.DB.prepare(
 			"SELECT name FROM sqlite_master WHERE type='table' AND name='customers'"
@@ -32,28 +69,6 @@ async function ensureTablesExist(env: Env): Promise<void> {
 			
 			// Drop old comments table if it exists
 			await env.DB.prepare("DROP TABLE IF EXISTS comments").run();
-
-			// Create users table
-			await env.DB.prepare(`
-				CREATE TABLE IF NOT EXISTS users (
-					id INTEGER PRIMARY KEY AUTOINCREMENT,
-					username TEXT NOT NULL UNIQUE,
-					password_hash TEXT NOT NULL,
-					is_admin INTEGER DEFAULT 0,
-					created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-				)
-			`).run();
-
-			// Create sessions table
-			await env.DB.prepare(`
-				CREATE TABLE IF NOT EXISTS sessions (
-					id TEXT PRIMARY KEY,
-					user_id INTEGER NOT NULL,
-					created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-					expires_at DATETIME NOT NULL,
-					FOREIGN KEY (user_id) REFERENCES users(id)
-				)
-			`).run();
 
 			// Create companies table
 			await env.DB.prepare(`
@@ -84,23 +99,6 @@ async function ensureTablesExist(env: Env): Promise<void> {
 					created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 					updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 					FOREIGN KEY (company_id) REFERENCES companies(id)
-				)
-			`).run();
-
-			// Create leads table
-			await env.DB.prepare(`
-				CREATE TABLE IF NOT EXISTS leads (
-					id INTEGER PRIMARY KEY AUTOINCREMENT,
-					first_name TEXT NOT NULL,
-					last_name TEXT NOT NULL,
-					email TEXT NOT NULL,
-					phone TEXT,
-					company TEXT,
-					status TEXT DEFAULT 'new',
-					source TEXT,
-					notes TEXT,
-					created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-					updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 				)
 			`).run();
 
@@ -265,6 +263,12 @@ export default {
 			if (method === "POST") {
 				try {
 					const body = await request.json() as { username: string; password: string };
+					if (!body.username || !body.password) {
+						return new Response(JSON.stringify({ error: "Username and password required" }), {
+							status: 400,
+							headers: { "content-type": "application/json" },
+						});
+					}
 					
 					// Check if any users exist
 					const userCount = await env.DB.prepare("SELECT COUNT(*) as count FROM users").first<{ count: number }>();
@@ -332,6 +336,7 @@ export default {
 						},
 					});
 				} catch (error) {
+					console.error("Login error:", error);
 					return new Response(JSON.stringify({ error: "Login failed" }), {
 						status: 500,
 						headers: { "content-type": "application/json" },
